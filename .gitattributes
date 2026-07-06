@@ -1,0 +1,8 @@
+# Normalize line endings across platforms
+* text=auto eol=lf
+# Windows batch wrappers want CRLF
+*.cmd        text eol=crlf
+*.cmd.example text eol=crlf
+# Keep shell scripts LF regardless of platform
+*.sh         text eol=lf
+*.sh.example text eol=lf

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "QDRANT_URL=http://host.docker.internal:6333",
+        "-e", "COLLECTION_NAME=cc_memory",
+        "ghcr.io/OWNER/cc-mem-mcp:latest"
+      ]
+    }
+  }
+}

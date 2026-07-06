@@ -1,0 +1,14 @@
+{
+  "_comment": "Add to ~/.claude/settings.json. Fires cc-mem-ingest right after each compaction so the summary is captured before context moves on. Requires a local `pip install cc-mem-mcp` (or replace the command with the docker variant below).",
+  "hooks": {
+    "PostCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "cc-mem-ingest --once", "timeout": 120 }
+        ]
+      }
+    ]
+  },
+  "_docker_variant": "docker run --rm -v cc-mem-data:/data -v \"$HOME/.claude/projects:/projects:ro\" -e CLAUDE_PROJECTS_DIR=/projects --entrypoint cc-mem-ingest cc-mem-mcp --once"
+}

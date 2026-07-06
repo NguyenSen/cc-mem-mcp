@@ -1,0 +1,30 @@
+[project]
+name = "cc-mem-mcp"
+version = "0.1.0"
+description = "Categorized write-through memory MCP server (Qdrant-backed) for Claude Code and other MCP clients"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "cc-mem-mcp contributors" }]
+keywords = ["mcp", "claude-code", "memory", "qdrant", "rag", "embeddings"]
+dependencies = [
+    "mcp>=1.2.0",
+    "qdrant-client>=1.12.0",
+    "fastembed>=0.4.0",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.30"]
+
+[project.scripts]
+cc-mem-mcp = "cc_mem_mcp.__main__:main"
+cc-mem-ingest = "cc_mem_mcp.cli:main"
+cc-mem-init = "cc_mem_mcp.init:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cc_mem_mcp"]

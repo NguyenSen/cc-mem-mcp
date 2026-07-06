@@ -1,0 +1,41 @@
+# Optional: run a SHARED Qdrant server (on any host everyone can reach) so memory
+# is reused across machines/people. The MCP server itself is NOT a long-running
+# service — MCP clients launch it on demand via `docker run -i` (see README).
+#
+#   docker compose up -d qdrant
+# then point the MCP at it with:  QDRANT_URL=http://<host>:6333
+#
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    ports:
+      - "6333:6333"   # REST/gRPC http
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    # For a public/shared server, protect it with an API key:
+    # environment:
+    #   QDRANT__SERVICE__API_KEY: "change-me"
+
+  # Long-running capture: watches Claude Code transcripts and ingests every
+  # compaction into the shared Qdrant above. Mounts the projects dir read-only.
+  # Build the image first:  docker build -t cc-mem-mcp .
+  ingest:
+    image: cc-mem-mcp
+    restart: unless-stopped
+    depends_on: [qdrant]
+    entrypoint: ["cc-mem-ingest"]
+    command: ["--watch", "--interval", "30"]
+    environment:
+      QDRANT_URL: "http://qdrant:6333"
+      CLAUDE_PROJECTS_DIR: "/projects"
+      EMBEDDING_PROVIDER: "local"
+    volumes:
+      # host Claude Code transcripts, read-only. Adjust the host path per-OS:
+      #   Linux/macOS: ${HOME}/.claude/projects
+      #   Windows:     ${USERPROFILE}/.claude/projects
+      - "${HOME:-${USERPROFILE}}/.claude/projects:/projects:ro"
+
+volumes:
+  qdrant_data:

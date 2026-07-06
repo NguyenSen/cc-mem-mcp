@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "cc-mem-data:/data",
+        "ghcr.io/OWNER/cc-mem-mcp:latest"
+      ]
+    }
+  }
+}

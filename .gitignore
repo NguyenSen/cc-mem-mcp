@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+# local embedded Qdrant data
+.cc-mem/
+data/
+*.qdrant/
+# realized hook wrappers hold machine-specific paths + your Qdrant URL; ship only *.example
+hooks/*.cmd
+hooks/*.sh
+# fastembed model cache if it lands in-tree
+.fastembed_cache/

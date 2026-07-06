@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# ---------------------------------------------------------------------------
+# Claude Code PostCompact hook (Linux/macOS) — capture each compaction into memory.
+#
+# Setup:
+#   1. Copy this to  hooks/postcompact.sh, edit the values, `chmod +x` it.
+#   2. Register it in your project's .claude/settings.json:
+#        { "hooks": { "PostCompact": [ { "matcher": "*", "hooks": [
+#            { "type": "command",
+#              "command": "/abs/path/hooks/postcompact.sh",
+#              "timeout": 120 } ] } ] } }
+#   3. Open /hooks once (or restart Claude Code) so the new hook is loaded.
+# ---------------------------------------------------------------------------
+set -euo pipefail
+
+export QDRANT_URL="http://YOUR_QDRANT_HOST:6333"
+export COLLECTION_NAME="cc_memory"
+export EMBEDDING_PROVIDER="local"
+export EMBEDDING_MODEL="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Point this at wherever cc-mem-mcp is installed (venv, or a global `cc-mem-init`).
+"$HERE/../.venv/bin/cc-mem-init" --no-claude-md --quiet --root "$PWD" >> "${TMPDIR:-/tmp}/cc-mem-hook.log" 2>&1 || true

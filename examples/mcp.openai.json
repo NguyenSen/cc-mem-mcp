@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "cc-mem-data:/data",
+        "-e", "EMBEDDING_PROVIDER=openai",
+        "-e", "EMBEDDING_MODEL=text-embedding-3-small",
+        "-e", "OPENAI_API_KEY",
+        "ghcr.io/OWNER/cc-mem-mcp:latest"
+      ]
+    }
+  }
+}

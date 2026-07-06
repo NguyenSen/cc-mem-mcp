@@ -1,0 +1,23 @@
+@echo off
+REM ---------------------------------------------------------------------------
+REM Claude Code PostCompact hook (Windows) — capture each compaction into memory.
+REM
+REM Setup:
+REM   1. Copy this file to  hooks\postcompact.cmd  and edit the values below.
+REM   2. Register it in your project's .claude\settings.json:
+REM        { "hooks": { "PostCompact": [ { "matcher": "*", "hooks": [
+REM            { "type": "command",
+REM              "command": "<abs path>\hooks\postcompact.cmd",
+REM              "timeout": 120 } ] } ] } }
+REM   3. Open /hooks once (or restart Claude Code) so the new hook is loaded.
+REM ---------------------------------------------------------------------------
+set "QDRANT_URL=http://YOUR_QDRANT_HOST:6333"
+set "COLLECTION_NAME=cc_memory"
+set "EMBEDDING_PROVIDER=local"
+set "EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
+
+REM Point this at wherever cc-mem-mcp is installed (venv exe, or a global install).
+"%~dp0..\.venv\Scripts\cc-mem-init.exe" --no-claude-md --quiet --root "%CD%" >> "%TEMP%\cc-mem-hook.log" 2>&1
+exit /b 0
