@@ -1,0 +1,20 @@
+// Project-specific regression gold set for the Server-Deploy / entry.io.vn memory.
+// Every case targets a fact KNOWN to have been captured into the collection, so a
+// miss means a retrieval/ranking regression — not a coverage gap. Grow this over
+// time; run after each session to catch recall drift.
+//
+// --- cc-mem-mcp build session facts ---
+{"query": "why was a multilingual embedding model chosen for memory", "expect_substring": "multilingual"}
+{"query": "which embedding model does the memory server use", "expect_substring": "paraphrase-multilingual"}
+{"query": "does Qdrant run embedded or as a server", "expect_substring": "QdrantClient"}
+{"query": "how does the ingester keep compactions lossless without blowing up", "expect_substring": "dedup"}
+{"query": "how are Claude Code compaction summaries detected in the transcript", "expect_substring": "isCompactSummary"}
+{"query": "PowerShell 5.1 Vietnamese UTF-8 encoding problem", "expect_substring": "mojibake"}
+{"query": "cp1252 error reading Vietnamese files", "expect_substring": "cp1252"}
+// --- entry.io.vn infra facts (generations 1-4) ---
+{"query": "user is behind CGNAT with no public IPv4", "expect_substring": "CGNAT"}
+{"query": "headscale DERP region for Vietnam", "expect_substring": "Hanoi"}
+{"query": "what is the VPN base domain in headscale config", "expect_substring": "entry.vpn"}
+{"query": "headscale server url", "expect_substring": "vpn.entry.io.vn"}
+{"query": "what does entry.io.vn provide as a platform", "expect_substring": "tunnel"}
+{"query": "VPN device sharing API endpoints", "expect_substring": "/v1/vpn/shares"}

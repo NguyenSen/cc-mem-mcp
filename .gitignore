@@ -13,5 +13,8 @@ data/
 # realized hook wrappers hold machine-specific paths + your Qdrant URL; ship only *.example
 hooks/*.cmd
 hooks/*.sh
+# realized eval runners hold your Qdrant URL; ship only *.example
+eval/run.sh
+eval/run.cmd
 # fastembed model cache if it lands in-tree
 .fastembed_cache/

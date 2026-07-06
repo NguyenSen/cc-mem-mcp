@@ -29,6 +29,20 @@ python -m eval.recall_eval --gold eval/gold.example.jsonl --k 5
 
 Restrict to one project: `--project Server-Deploy`.
 
+### One-command regression
+
+Copy a runner, set your host once, and run it after each session to catch recall
+drift (both files are gitignored once realized — they hold your Qdrant host):
+
+```bash
+cp eval/run.example.sh eval/run.sh     # edit YOUR_QDRANT_HOST + PY
+PY=./.venv/Scripts/python.exe bash eval/run.sh
+```
+
+It runs `--auto` (upper bound) + the project gold set + coverage in one shot.
+Keep a project-specific gold file (see `eval/gold.server-deploy.jsonl`) of facts
+you *know* were captured, so a miss is a retrieval regression, not a coverage gap.
+
 ## What it reports
 
 ### 1. Retrieval recall — the metric that matters
