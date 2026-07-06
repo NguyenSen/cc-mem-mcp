@@ -1,0 +1,12 @@
+// Gold retrieval cases — one JSON object per line. Lines starting with // are ignored.
+// Each case: {"query": "...", "expect_substring": "..."} OR {"query": "...", "expect_id": "<point-id>"}
+// Optional: "category", "project". A case is a HIT if the expected fact appears
+// in the top-k results. Hand-write these against facts you KNOW were said in an
+// earlier session — that is the honest test of "did compaction lose it".
+//
+// The examples below are project-specific placeholders; replace them with your own.
+{"query": "why was a multilingual embedding model chosen", "expect_substring": "multilingual"}
+{"query": "what Qdrant host does memory use", "expect_substring": "6333"}
+{"query": "PowerShell 5.1 Vietnamese UTF-8 encoding problem", "expect_substring": "mojibake"}
+{"query": "how are duplicate chunks avoided across compactions", "expect_substring": "dedup"}
+{"query": "which SSH host and port reaches the deploy server", "expect_substring": "8686"}
