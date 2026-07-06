@@ -131,6 +131,7 @@ All via environment variables (see [`.env.example`](.env.example)):
 | `COLLECTION_NAME` | `cc_memory` | Qdrant collection. |
 | `EMBEDDING_PROVIDER` | `local` | `local` (FastEmbed) or `openai`. |
 | `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | Model for the chosen provider. |
+| `EMBEDDING_QUERY_PREFIX` / `EMBEDDING_PASSAGE_PREFIX` | *(empty)* | Instruction prefixes; set `"query: "` / `"passage: "` for the e5 family. See [`eval/`](eval/). |
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | *(unset)* | For `openai` provider. |
 | `CC_MEM_CATEGORIES` | *(built-in)* | JSON `{domain:[sub,...]}` to override the taxonomy. |
 | `CC_MEM_STRICT_CATEGORIES` | `0` | `1` = reject unknown categories instead of warning. |

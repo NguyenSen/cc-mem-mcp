@@ -97,6 +97,66 @@ the low hundreds of ms against a server backend.
 | points per generation | small, sub-linear growth | constant-and-total-ballooning → dedup broken |
 | gold recall ≪ auto recall | close-ish | huge gap → queries need better chunking or a stronger embedding model |
 
+## Tracking recall over time
+
+`--metrics FILE` appends one JSON line per run — build a time series to catch drift:
+
+```bash
+python -m eval.recall_eval --gold eval/gold.server-deploy.jsonl --metrics eval/metrics.jsonl
+# {"ts": "...", "collection": "cc_memory", "model": "...", "mode": "gold",
+#  "n": 14, "recall@1": 0.5, "recall@5": 0.79, "mrr": 0.59, ...}
+```
+
+`run.example.sh` already passes `--metrics eval/metrics.jsonl`. Grow the gold set
+as you learn new facts:
+
+```bash
+python -m eval.add_gold "which SSH port reaches the server" 8686
+```
+
+Schedule it so recall is measured without you remembering to:
+
+```cron
+# Linux/macOS cron — daily 07:00
+0 7 * * * cd /path/to/cc-mem-mcp && PY=./.venv/bin/python bash eval/run.sh >> eval/run.log 2>&1
+```
+
+```powershell
+# Windows Task Scheduler — daily 07:00
+schtasks /Create /SC DAILY /ST 07:00 /TN cc-mem-eval `
+  /TR "cmd /c cd /d D:\path\to\cc-mem-mcp && eval\run.cmd"
+```
+
+## Comparing embedding models (A/B)
+
+`reembed.py` copies a collection's chunks into a new one with a *different* model
+(same chunks, so only the model varies), then evaluate the copy:
+
+```bash
+# re-embed with a stronger multilingual model (e5 needs the passage prefix)
+QDRANT_URL=... COLLECTION_NAME=cc_memory \
+python -m eval.reembed --target-collection cc_memory_e5 \
+  --target-model intfloat/multilingual-e5-large --passage-prefix "passage: " --recreate
+
+COLLECTION_NAME=cc_memory_e5 EMBEDDING_MODEL=intfloat/multilingual-e5-large \
+python -m eval.recall_eval --gold eval/gold.server-deploy.jsonl --k 5 --query-prefix "query: "
+```
+
+Measured on this project's memory (541 chunks, 14-case gold set), real-query recall:
+
+| model | dim | recall@1 | recall@5 | MRR | latency p50 |
+| --- | --- | --- | --- | --- | --- |
+| paraphrase-multilingual-MiniLM-L12-v2 (default) | 384 | 0.54 | 0.85 | 0.63 | 13 ms |
+| paraphrase-multilingual-mpnet-base-v2 | 768 | 0.46 | 0.77 | 0.54 | 70 ms |
+| **intfloat/multilingual-e5-large** | 1024 | **0.69** | **0.92** | **0.78** | 105 ms |
+
+Takeaways: a bigger model is *not* automatically better (mpnet regressed); e5-large
+is the clear winner **but only with its `query:`/`passage:` prefixes**. To adopt it
+in production set `EMBEDDING_MODEL` + `EMBEDDING_QUERY_PREFIX`/`EMBEDDING_PASSAGE_PREFIX`
+and re-ingest into a fresh `COLLECTION_NAME` (the dim changes 384→1024). The one
+remaining miss is a heavily-paraphrased query ("dedup") — a sign to add hybrid/keyword
+retrieval, which no dense model alone fixes.
+
 ## Caveats
 
 - No ground-truth relevance labels beyond your gold set — auto mode assumes the

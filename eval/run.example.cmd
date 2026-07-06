@@ -10,6 +10,6 @@ set "PYTHONIOENCODING=utf-8"
 if "%PY%"=="" set "PY=python"
 
 pushd "%~dp0.."
-"%PY%" -m eval.recall_eval --auto 150 --k 10 %*
-"%PY%" -m eval.recall_eval --gold eval/gold.server-deploy.jsonl --k 5 --no-coverage
+"%PY%" -m eval.recall_eval --auto 150 --k 10 --metrics eval/metrics.jsonl %*
+"%PY%" -m eval.recall_eval --gold eval/gold.server-deploy.jsonl --k 5 --no-coverage --metrics eval/metrics.jsonl
 popd

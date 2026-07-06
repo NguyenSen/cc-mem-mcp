@@ -82,7 +82,7 @@ class MemoryStore:
                 raise ValueError(msg)
             log.warning(msg)
 
-        vector = self.embedder.embed([content])[0]
+        vector = self.embedder.embed([self.cfg.passage_prefix + content])[0]
         point_id = str(uuid.uuid4())
         payload = {
             "content": content,
@@ -143,7 +143,7 @@ class MemoryStore:
         if not fresh:
             return {"received": len(items), "unique": 0, "embedded": 0, "skipped_existing": len(uniq)}
 
-        vectors = self.embedder.embed([u["content"] for u in fresh])
+        vectors = self.embedder.embed([self.cfg.passage_prefix + u["content"] for u in fresh])
         points: List[qm.PointStruct] = []
         now = datetime.now(timezone.utc).isoformat()
         for u, vec in zip(fresh, vectors):
@@ -198,7 +198,7 @@ class MemoryStore:
             conditions.append(qm.FieldCondition(key="project", match=qm.MatchValue(value=project)))
         flt = qm.Filter(must=conditions) if conditions else None
 
-        vector = self.embedder.embed([query])[0]
+        vector = self.embedder.embed([self.cfg.query_prefix + query])[0]
         hits = self.client.query_points(
             collection_name=self.cfg.collection,
             query=vector,

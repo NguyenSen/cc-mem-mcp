@@ -24,6 +24,9 @@ class Config:
     embedding_model: str
     openai_api_key: str | None
     openai_base_url: str | None
+    # some models (e5 family) need instruction prefixes; empty = no-op for others
+    query_prefix: str
+    passage_prefix: str
 
     @property
     def uses_server(self) -> bool:
@@ -44,4 +47,6 @@ class Config:
             embedding_model=model,
             openai_api_key=(os.getenv("OPENAI_API_KEY") or "").strip() or None,
             openai_base_url=(os.getenv("OPENAI_BASE_URL") or "").strip() or None,
+            query_prefix=os.getenv("EMBEDDING_QUERY_PREFIX", ""),
+            passage_prefix=os.getenv("EMBEDDING_PASSAGE_PREFIX", ""),
         )

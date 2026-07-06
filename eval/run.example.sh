@@ -12,6 +12,8 @@ export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 cd "$(dirname "$0")/.."
 PY="${PY:-python}"   # or point at your venv, e.g. PY=./.venv/Scripts/python.exe
 
-# best-case upper bound (known-item) + real-case gold set + coverage report
-"$PY" -m eval.recall_eval --auto "${AUTO:-150}" --k "${K:-10}" "$@"
-"$PY" -m eval.recall_eval --gold "${GOLD:-eval/gold.server-deploy.jsonl}" --k 5 --no-coverage
+# best-case upper bound (known-item) + real-case gold set + coverage report.
+# --metrics appends a JSON line per run to eval/metrics.jsonl (time-series recall).
+"$PY" -m eval.recall_eval --auto "${AUTO:-150}" --k "${K:-10}" --metrics eval/metrics.jsonl "$@"
+"$PY" -m eval.recall_eval --gold "${GOLD:-eval/gold.server-deploy.jsonl}" --k 5 \
+    --no-coverage --metrics eval/metrics.jsonl

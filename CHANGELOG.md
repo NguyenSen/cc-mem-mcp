@@ -24,3 +24,9 @@ Initial release.
 - Docker image, `docker-compose` (shared Qdrant + optional watcher), and a
   GitHub Actions workflow to publish the image to GHCR.
 - PostCompact hook templates (Windows `.cmd`, Unix `.sh`) for automatic capture.
+- Retrieval-recall eval harness (`eval/`): auto known-item + gold set + coverage
+  + latency, a `reembed.py` A/B tool, `--metrics` time-series output, and an
+  `add_gold` helper.
+- Optional `EMBEDDING_QUERY_PREFIX` / `EMBEDDING_PASSAGE_PREFIX` (empty by
+  default) so the e5 model family works in production; measured to lift
+  real-query recall@5 from ~0.85 to ~0.92.

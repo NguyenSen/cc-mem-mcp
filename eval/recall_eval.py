@@ -42,6 +42,7 @@ import statistics
 import sys
 import time
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from cc_mem_mcp.config import Config
@@ -172,11 +173,14 @@ def _bar(frac: float, width: int = 24) -> str:
 # eval modes
 # ---------------------------------------------------------------------------
 
-def run_auto(store: MemoryStore, n: int, k: int, project: Optional[str], seed: int) -> None:
+QUERY_PREFIX = ""  # set via --query-prefix; e5 models need "query: "
+
+
+def run_auto(store: MemoryStore, n: int, k: int, project: Optional[str], seed: int) -> Dict[str, Any]:
     pool = scroll_all(store, project, cap=max(n * 4, n))
     if not pool:
         print("!! collection empty (or project filter matched nothing) — nothing to evaluate")
-        return
+        return {}
     rnd = random.Random(seed)
     sample = pool if len(pool) <= n else rnd.sample(pool, n)
 
@@ -193,7 +197,7 @@ def run_auto(store: MemoryStore, n: int, k: int, project: Optional[str], seed: i
         if len(query.split()) < 3:  # too little signal to be a fair query
             continue
         t0 = time.perf_counter()
-        hits = store.find(query, project=project, limit=k)
+        hits = store.find(QUERY_PREFIX + query, project=project, limit=k)
         latencies.append((time.perf_counter() - t0) * 1000)
         rank = next((idx + 1 for idx, h in enumerate(hits) if h["id"] == pid), None)
         ranks.append(rank)
@@ -230,14 +234,16 @@ def run_auto(store: MemoryStore, n: int, k: int, project: Optional[str], seed: i
         s = summarize(rs, k)
         print(f"  {cat_name:<34} n={s['n']:>3} recall@{k}={s[f'recall@{k}']:.2f} mrr={s['mrr']:.2f}")
 
+    p50 = p95 = 0.0
     if latencies:
         latencies.sort()
         p50 = statistics.median(latencies)
         p95 = latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))]
         print(f"\n--- latency --- p50={p50:.0f}ms p95={p95:.0f}ms (n={len(latencies)})")
+    return {"mode": "auto", **overall, "latency_p50_ms": round(p50), "latency_p95_ms": round(p95)}
 
 
-def run_gold(store: MemoryStore, path: str, k: int, project: Optional[str]) -> None:
+def run_gold(store: MemoryStore, path: str, k: int, project: Optional[str]) -> Dict[str, Any]:
     cases: List[Dict[str, Any]] = []
     with open(path, "r", encoding="utf-8") as fh:
         for line in fh:
@@ -247,7 +253,7 @@ def run_gold(store: MemoryStore, path: str, k: int, project: Optional[str]) -> N
             cases.append(json.loads(line))
     if not cases:
         print(f"!! no cases in {path}")
-        return
+        return {}
 
     ranks: List[Optional[int]] = []
     latencies: List[float] = []
@@ -259,7 +265,7 @@ def run_gold(store: MemoryStore, path: str, k: int, project: Optional[str]) -> N
         want_sub = (c.get("expect_substring") or "").lower()
         proj = c.get("project", project)
         t0 = time.perf_counter()
-        hits = store.find(q, category=c.get("category"), project=proj, limit=k)
+        hits = store.find(QUERY_PREFIX + q, category=c.get("category"), project=proj, limit=k)
         latencies.append((time.perf_counter() - t0) * 1000)
 
         rank = None
@@ -275,10 +281,13 @@ def run_gold(store: MemoryStore, path: str, k: int, project: Optional[str]) -> N
         print(f"  [{mark:>7}] {q[:52]:<52} | top: {top}")
 
     print()
-    for key, val in summarize(ranks, k).items():
+    overall = summarize(ranks, k)
+    for key, val in overall.items():
         print(f"  {key:>10}: {val}")
+    p50 = statistics.median(latencies) if latencies else 0.0
     if latencies:
-        print(f"  latency p50={statistics.median(latencies):.0f}ms")
+        print(f"  latency p50={p50:.0f}ms")
+    return {"mode": "gold", "gold": path, **overall, "latency_p50_ms": round(p50)}
 
 
 def print_coverage(store: MemoryStore, project: Optional[str]) -> None:
@@ -309,7 +318,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--project", default=None, help="restrict to one project label")
     ap.add_argument("--seed", type=int, default=1234, help="sampling seed (default 1234)")
     ap.add_argument("--no-coverage", action="store_true", help="skip the coverage report")
+    ap.add_argument("--query-prefix", default="", help="prepend to every query (e5 needs 'query: ')")
+    ap.add_argument("--metrics", metavar="FILE", default=None,
+                    help="append a JSON summary line per run (time-series recall)")
     args = ap.parse_args(argv)
+
+    global QUERY_PREFIX
+    QUERY_PREFIX = args.query_prefix
 
     if not args.auto and not args.gold:
         args.auto = 100  # sensible default
@@ -321,10 +336,21 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if not args.no_coverage:
         print_coverage(store, args.project)
+    records: List[Dict[str, Any]] = []
     if args.auto:
-        run_auto(store, args.auto, args.k, args.project, args.seed)
+        records.append(run_auto(store, args.auto, args.k, args.project, args.seed))
     if args.gold:
-        run_gold(store, args.gold, args.k, args.project)
+        records.append(run_gold(store, args.gold, args.k, args.project))
+
+    if args.metrics:
+        ts = datetime.now(timezone.utc).isoformat()
+        meta = {"ts": ts, "collection": cfg.collection, "model": cfg.embedding_model,
+                "project": args.project}
+        with open(args.metrics, "a", encoding="utf-8") as fh:
+            for rec in records:
+                if rec:
+                    fh.write(json.dumps({**meta, **rec}, ensure_ascii=False) + "\n")
+        print(f"\nappended {sum(1 for r in records if r)} metric line(s) -> {args.metrics}")
     return 0
 
 

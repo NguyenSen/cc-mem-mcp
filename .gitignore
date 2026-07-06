@@ -16,5 +16,7 @@ hooks/*.sh
 # realized eval runners hold your Qdrant URL; ship only *.example
 eval/run.sh
 eval/run.cmd
+# time-series recall metrics (local history)
+eval/metrics.jsonl
 # fastembed model cache if it lands in-tree
 .fastembed_cache/

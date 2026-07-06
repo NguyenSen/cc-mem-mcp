@@ -18,3 +18,4 @@
 {"query": "headscale server url", "expect_substring": "vpn.entry.io.vn"}
 {"query": "what does entry.io.vn provide as a platform", "expect_substring": "tunnel"}
 {"query": "VPN device sharing API endpoints", "expect_substring": "/v1/vpn/shares"}
+{"query": "which SSH port and host reaches the deploy server", "expect_substring": "8686"}
